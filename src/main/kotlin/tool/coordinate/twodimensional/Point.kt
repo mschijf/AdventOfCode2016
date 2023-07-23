@@ -53,8 +53,11 @@ data class Point private constructor(
     fun plusX(dx: Int) = plusXY(dx, 0)
     fun plusY(dy: Int) = plusXY(0, dy)
 
-    fun moveOneStep(dir: Direction) = plusXY(dir.dXY().x, dir.dXY().y)
-    fun moveOneStep(dir: WindDirection) = plusXY(dir.dXY().x, dir.dXY().y)
+    fun moveSteps(dir: Direction, steps: Int) = plusXY(steps * dir.dXY().x, steps * dir.dXY().y)
+    fun moveSteps(dir: WindDirection, steps: Int) = plusXY(steps * dir.dXY().x, steps * dir.dXY().y)
+
+    fun moveOneStep(dir: Direction) = moveSteps(dir, 1)
+    fun moveOneStep(dir: WindDirection) = moveSteps(dir, 1)
 
     fun up() = moveOneStep(Direction.UP)
     fun down() = moveOneStep(Direction.DOWN)
