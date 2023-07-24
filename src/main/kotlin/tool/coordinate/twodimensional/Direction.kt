@@ -1,19 +1,19 @@
 package tool.coordinate.twodimensional
 
-enum class Direction(val directionSymbol: String) {
-    UP("^") {
+enum class Direction(val directionSymbol: String, val directionLetter: String) {
+    UP("^", "U") {
         override fun rotateRight() = RIGHT
         override fun rotateLeft() = LEFT
     },
-    DOWN("v") {
+    DOWN("v", "D") {
         override fun rotateRight() = LEFT
         override fun rotateLeft() = RIGHT
     },
-    RIGHT(">") {
+    RIGHT(">", "R") {
         override fun rotateRight() = DOWN
         override fun rotateLeft() = UP
     },
-    LEFT("<") {
+    LEFT("<", "L") {
         override fun rotateRight() = UP
         override fun rotateLeft() = DOWN
     };
@@ -24,11 +24,17 @@ enum class Direction(val directionSymbol: String) {
     fun opposite() = rotateLeft().rotateLeft()
 
     companion object {
-        fun of(s: String): Direction =
+        fun ofSymbol(s: String): Direction =
             Direction
                 .values()
                 .firstOrNull() { it.directionSymbol == s.uppercase() }
                 ?: throw Exception("$s is not a symbol in Direction")
+
+        fun ofLetter(s: String): Direction =
+            Direction
+                .values()
+                .firstOrNull() { it.directionLetter == s.uppercase() }
+                ?: throw Exception("$s is not a letter in Direction")
     }
 
 }

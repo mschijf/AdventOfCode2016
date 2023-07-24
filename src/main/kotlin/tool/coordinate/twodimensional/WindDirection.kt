@@ -1,6 +1,6 @@
 package tool.coordinate.twodimensional
 
-enum class WindDirection(val directionSymbol: String) {
+enum class WindDirection(val directionLetter: String) {
     NORTH("N") {
         override fun rotateRight() = NORTHEAST
         override fun rotateLeft() = NORTHWEST
@@ -36,15 +36,15 @@ enum class WindDirection(val directionSymbol: String) {
 
     abstract fun rotateRight(): WindDirection
     abstract fun rotateLeft(): WindDirection
-    override fun toString() = directionSymbol
+    override fun toString() = directionLetter
     fun opposite() = rotateLeft().rotateLeft().rotateLeft().rotateLeft()
 
     companion object {
-        fun of(s: String): WindDirection =
+        fun ofLetter(s: String): WindDirection =
             WindDirection
                 .values()
-                .firstOrNull() { it.directionSymbol == s.uppercase() }
-                ?: throw Exception("$s is not a symbol in WindDirection")
+                .firstOrNull() { it.directionLetter == s.uppercase() }
+                ?: throw Exception("$s is not a letter in WindDirection")
     }
 
 }
