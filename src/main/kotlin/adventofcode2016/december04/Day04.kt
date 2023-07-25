@@ -9,27 +9,24 @@ fun main() {
 class Day04(test: Boolean) : PuzzleSolverAbstract(test) {
 
     override fun resultPartOne(): Any {
-        val x = inputLines
-            .map {it.splitRoomInfo()}
+        return inputLines
+            .map {RoomInfo.of(it)}
             .filter {room -> room.letters.toCheckSum() == room.checkSum}
-        return x.sumOf { it.sectorID }
+            .sumOf { it.sectorID }
     }
 
     override fun resultPartTwo(): Any {
-        val x = inputLines
-            .map {it.splitRoomInfo()}
+        return inputLines
+            .map {RoomInfo.of(it)}
             .map {Pair(it.decrypt(), it.sectorID) }
             .filter{it.first.contains("north")}
-        return x
     }
 
-    private fun RoomInfo.decrypt(): String {
-        return this.letters.map{if (it == '-') ' ' else it.decrypt(this.sectorID)}.joinToString("")
-    }
+    private fun RoomInfo.decrypt() =
+        this.letters.map{if (it == '-') ' ' else it.decrypt(this.sectorID)}.joinToString("")
 
-    private fun Char.decrypt(rotate: Int): Char {
-        return 'a' + (((this - 'a') + rotate) % 26)
-    }
+    private fun Char.decrypt(rotate: Int) =
+        'a' + (((this - 'a') + rotate) % 26)
 
     private fun String.toCheckSum() =
         this.filterNot{it == '-'}
@@ -37,17 +34,19 @@ class Day04(test: Boolean) : PuzzleSolverAbstract(test) {
             .toList()
             .sortedByDescending { (letter, count) -> 100*count + (26 - (letter - 'a')) }
             .take(5)
-            .map{it.second}
+            .map{(letter, count) -> letter}
             .joinToString("")
 
-    private fun String.splitRoomInfo(): RoomInfo {
-        return RoomInfo(
-            letters = this.substringBeforeLast("-"),
-            sectorID = this.substringAfterLast("-").substringBefore("[").toInt(),
-            checkSum = this.substringAfter("[").substringBefore("]"),
+}
+
+data class RoomInfo(val letters: String, val sectorID: Int, val checkSum:String) {
+    companion object {
+        fun of(input: String) =
+            RoomInfo(
+                letters = input.substringBeforeLast("-"),
+                sectorID = input.substringAfterLast("-").substringBefore("[").toInt(),
+                checkSum = input.substringAfter("[").substringBefore("]"),
             )
     }
 }
-
-data class RoomInfo(val letters: String, val sectorID: Int, val checkSum:String)
 
