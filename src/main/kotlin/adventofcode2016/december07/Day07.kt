@@ -19,12 +19,12 @@ class Day07(test: Boolean) : PuzzleSolverAbstract(test) {
     override fun resultPartTwo(): Any {
         val allStrings = inputLines.map{it.breakInParts()}
 
-        //make per line a list of aba occurences appearing in hyperMode blocks
+        //make per line a list of aba occurences appearing in hyperMode blocks -> resulting in list of list<aba-strings>
         val hyperList = allStrings
             .map{it.filter{(_, hypermode) -> hypermode}.map{(letters, _) -> letters}}
             .map{it.flatMap{letters -> letters.listOfABA()}}
 
-        //make per line a list of aba occurences appearing in non-hyperMode blocks
+        //make per line a list of aba occurences appearing in non-hyperMode blocks -> resulting in list of list<aba-strings>
         val nonHyperList = allStrings
             .map{it.filter{(_, hypermode) -> !hypermode}.map{(letters, _) -> letters}}
             .map{it.flatMap{letters -> letters.listOfABA()}}
@@ -52,18 +52,11 @@ class Day07(test: Boolean) : PuzzleSolverAbstract(test) {
         var current = ""
         var i = 0
         while (i < this.length) {
-            when (this[i]) {
-                '[' -> {
-                    result += Pair(current, false)
-                    current = ""
-                }
-
-                ']' -> {
-                    result += Pair(current, true)
-                    current = ""
-                }
-
-                else -> current += this[i]
+            if (this[i] in "[]") {
+                result += Pair(current, this[i] == ']')
+                current = ""
+            } else {
+                current += this[i]
             }
             i++
         }
