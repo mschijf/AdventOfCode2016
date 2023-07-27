@@ -1,5 +1,7 @@
 package adventofcode2016
 
+import java.io.File
+
 abstract class PuzzleSolverAbstract (
     val test: Boolean) {
 
@@ -7,7 +9,7 @@ abstract class PuzzleSolverAbstract (
 
     private val fileName = if (test) "example" else "input"
     private val path = String.format("data/december%02d", dayOfMonth)
-    protected var inputLines = Input(path, fileName).inputLines
+    protected var inputLines = getInputLines(path, fileName)
         private set
     private var overriddenInput = false
 
@@ -49,11 +51,17 @@ abstract class PuzzleSolverAbstract (
 
     fun setAlternativeInputSourcePostfix(postFix: String) {
         overriddenInput = true
-        inputLines = Input(path, fileName+postFix).inputLines
+        inputLines = getInputLines(path, fileName+postFix)
     }
 
     fun setDefaultInput() {
         overriddenInput = false
-        inputLines = Input(path, fileName).inputLines
+        inputLines = getInputLines(path, fileName)
     }
+
+    private fun getInputLines(path: String, fileName: String): List<String> {
+        val file = File("$path/$fileName")
+        return if (file.exists()) file.bufferedReader().readLines() else emptyList()
+    }
+
 }

@@ -1,6 +1,5 @@
-package adventofcode2016.december05
+package adventofcode2016
 
-import adventofcode2016.PuzzleSolverAbstract
 import java.math.BigInteger
 import java.security.MessageDigest
 

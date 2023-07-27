@@ -1,6 +1,4 @@
-package adventofcode2016.december04
-
-import adventofcode2016.PuzzleSolverAbstract
+package adventofcode2016
 
 fun main() {
     Day04(test=false).showResult()
@@ -10,14 +8,14 @@ class Day04(test: Boolean) : PuzzleSolverAbstract(test) {
 
     override fun resultPartOne(): Any {
         return inputLines
-            .map {RoomInfo.of(it)}
+            .map { RoomInfo.of(it) }
             .filter {room -> room.letters.toCheckSum() == room.checkSum}
             .sumOf { it.sectorID }
     }
 
     override fun resultPartTwo(): Any {
         return inputLines
-            .map {RoomInfo.of(it)}
+            .map { RoomInfo.of(it) }
             .map {Pair(it.decrypt(), it.sectorID) }
             .filter{it.first.contains("north")}
     }

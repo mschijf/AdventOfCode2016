@@ -1,7 +1,5 @@
 package adventofcode2016
 
-import tool.coordinate.twodimensional.Point
-import tool.coordinate.twodimensional.pos
 import java.lang.Math.floorMod
 
 fun main() {

@@ -1,6 +1,4 @@
-package adventofcode2016.december07
-
-import adventofcode2016.PuzzleSolverAbstract
+package adventofcode2016
 
 fun main() {
     Day07(test=false).showResult()

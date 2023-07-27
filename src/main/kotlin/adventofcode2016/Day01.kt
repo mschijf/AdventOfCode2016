@@ -1,6 +1,5 @@
-package adventofcode2016.december01
+package adventofcode2016
 
-import adventofcode2016.PuzzleSolverAbstract
 import tool.coordinate.twodimensional.Direction
 import tool.coordinate.twodimensional.Point
 import tool.coordinate.twodimensional.pos
