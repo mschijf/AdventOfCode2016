@@ -39,12 +39,11 @@ class Day05(test: Boolean) : PuzzleSolverAbstract(test) {
             .map {(doorID + it).toMD5Hexadecimal()}
             .filter { it.startsWith("00000") }
             .filter { val ch = it[5] - '0'; ch in 0 .. 7 && ch !in set }
-            .map { Pair(it[5] - '0', it[6]).also { set+=it.first }  }
+            .map { Pair(it[5] - '0', it[6]).also { p-> set+=p.first }  }
             .take(8)
             .toList()
             .sortedBy { it.first }
-            .map{it.second}
-            .joinToString("")
+            .joinToString(""){it.second.toString()}
 //
 //
 //        val result = charArrayOf('-', '-', '-', '-', '-', '-', '-', '-')
