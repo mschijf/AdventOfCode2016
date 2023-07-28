@@ -25,7 +25,8 @@ class Day09(test: Boolean) : PuzzleSolverAbstract(test) {
         while (i < this.length) {
             val marker = this.checkMarker(i)
             if (marker != null) {
-                result.append(this.substring(i+marker.length(), i+marker.length()+marker.first).repeat(marker.second))
+                val repeatingPart = this.substring(i+marker.length(), i+marker.length()+marker.first)
+                result.append(repeatingPart.repeat(marker.second))
                 i+= marker.length() + marker.first
             } else {
                 result.append(this[i])
@@ -41,8 +42,8 @@ class Day09(test: Boolean) : PuzzleSolverAbstract(test) {
         while (i < this.length) {
             val marker = this.checkMarker(i)
             if (marker != null) {
-                val markedPart = this.substring(i+marker.length(), i+marker.length()+marker.first)
-                result += markedPart.decompressV2Length() * marker.second
+                val repeatingPart = this.substring(i+marker.length(), i+marker.length()+marker.first)
+                result += repeatingPart.decompressV2Length() * marker.second
                 i+= marker.length() + marker.first
             } else {
                 result++
