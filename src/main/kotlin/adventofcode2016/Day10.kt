@@ -10,16 +10,12 @@ class Day10(test: Boolean) : PuzzleSolverAbstract(test) {
 
     override fun resultPartOne(): Any {
         val checkValues = if (test) Pair(2,5) else Pair(17,61)
-//        println(chipHolders.values.filter { it.hasTwo() }.count())
         while (chipHolders.values.any { it.hasTwo() }) {
             val proceedingBot = chipHolders.values.first {it.hasTwo()}
-            val valuesCompared = proceedingBot.comparing()
-            if (valuesCompared == checkValues)
-                println("The comparing bot is: ${proceedingBot.name}")
-            proceedingBot.proceed(allChipHolders = chipHolders)
-//            println(chipHolders.values.count { it.hasTwo() })
+            if (proceedingBot.proceed(allChipHolders = chipHolders) == checkValues)
+                return "The bot comparing $checkValues is: ${proceedingBot.name}"
         }
-        return ""
+        return "none of the bots compared $checkValues"
     }
 
     override fun resultPartTwo(): Any {
@@ -59,22 +55,22 @@ data class ChipHolder(val name: String, val giveLowTo: String?=null, val giveHig
 
     fun addChip(chip: Int) {
         if (chips.count() >= 2)
-            println("TOOOOOO much")
+            throw Exception("Too much chips in holder")
         chips.add(chip)
     }
 
-    fun comparing() =
-        Pair(chips.min(), chips.max())
-
-    fun proceed(allChipHolders: Map<String, ChipHolder>) {
+    fun proceed(allChipHolders: Map<String, ChipHolder>): Pair<Int, Int> {
         if (chips.size != 2)
-            throw Exception("no two!")
+            throw Exception("not exactly two item in holder!")
+
         if (giveLowTo == null || giveHighTo == null) {
             throw Exception("no two!")
         } else {
-            allChipHolders[giveLowTo]!!.addChip(chips.min())
-            allChipHolders[giveHighTo]!!.addChip(chips.max())
+            val compare = Pair(chips.min(), chips.max())
             chips.clear()
+            allChipHolders[giveLowTo]!!.addChip(compare.first)
+            allChipHolders[giveHighTo]!!.addChip(compare.second)
+            return compare
         }
     }
 
