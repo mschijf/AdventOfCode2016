@@ -4,7 +4,7 @@ import tool.mylambdas.collectioncombination.mapCombinedItems
 import kotlin.math.min
 
 fun main() {
-    Day11(test=true).showResult()
+    Day11(test=false).showResult()
 }
 
 class Day11(test: Boolean) : PuzzleSolverAbstract(test) {
@@ -17,8 +17,8 @@ class Day11(test: Boolean) : PuzzleSolverAbstract(test) {
         return x
     }
 
-    private val hash = mutableMapOf<String, Int>()
     private var count = 0L
+    private val hash: MutableMap<String, Int> = mutableMapOf()
     private fun solve(alreadySeen: Set<String> = emptySet(), shortestSoFar: Int = 999_999_999 ): Int {
         count++
         if (building.allOnTop()) {
@@ -39,7 +39,7 @@ class Day11(test: Boolean) : PuzzleSolverAbstract(test) {
         allMoves.forEach { move ->
             building.doMove(move)
             if (building.hashKey() !in visited) {
-                val tmp = solve(visited, min (shortest, shortestSoFar))
+                val tmp = solve(visited, min (shortest, shortestSoFar) )
                 shortest = min(shortest,tmp)
             }
             building.undoMove(move)
@@ -117,8 +117,9 @@ class Building(test: Boolean) {
 
     fun elevatorCandidates(): List<Move> {
         val currentFloor = floors[elevatorPos]
-        val allCandidates = currentFloor.map { comp -> listOf(comp) } + //listOf(emptyList<Component>()) +
-                currentFloor.toList().mapCombinedItems { comp1, comp2 -> listOf(comp1, comp2) }
+        val allCandidates =
+            currentFloor.toList().mapCombinedItems { comp1, comp2 -> listOf(comp1, comp2) } +
+                    currentFloor.map { comp -> listOf(comp) } //+ listOf(emptyList<Component>()) +
 
         return (-1..1 step 2).filter { elevatorPos+it in 0..3 }
             .flatMap{ deltaPos -> allCandidates.validForFloor(floors[elevatorPos+deltaPos]).map{validCandidate -> Move(deltaPos, validCandidate) }}
@@ -137,6 +138,6 @@ class Building(test: Boolean) {
         this.filterIsInstance<Generator>().map{it.name}.toSet()
 
     fun minimalStepsToTop() =
-        4 - elevatorPos
+        3 - elevatorPos
 
 }
