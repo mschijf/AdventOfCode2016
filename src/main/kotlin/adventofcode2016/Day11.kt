@@ -1,7 +1,6 @@
 package adventofcode2016
 
 import tool.mylambdas.collectioncombination.mapCombinedItems
-import kotlin.math.min
 
 fun main() {
     Day11(test=false).showResult()
@@ -9,44 +8,63 @@ fun main() {
 
 class Day11(test: Boolean) : PuzzleSolverAbstract(test) {
 
-    private val building = Building(test)
-
     override fun resultPartOne(): Any {
-        val x = solve()
-        println("nodes visited: $count")
-        return x
+        val building = Building(
+            if (test)
+                listOf(
+                    setOf(Chip("hydrogen"), Chip("lithium")),
+                    setOf(Generator("hydrogen")),
+                    setOf(Generator("lithium")),
+                    setOf()
+                )
+            else
+                listOf(
+                    setOf(Generator("thulium"), Chip("thulium"), Generator("plutonium"), Generator("strontium")),
+                    setOf(Chip("plutonium"), Chip("strontium"),),
+                    setOf(Generator("qpromethium"), Chip("qpromethium"), Generator("ruthenium"), Chip("ruthenium"),),
+                    setOf()
+                )
+        )
+        return building.bfs()
     }
 
-    private var count = 0L
-    private val hash: MutableMap<String, Int> = mutableMapOf()
-    private fun solve(alreadySeen: Set<String> = emptySet(), shortestSoFar: Int = 999_999_999 ): Int {
-        count++
-        if (building.allOnTop()) {
-            return 0
-        }
+    override fun resultPartTwo(): Any {
+        val building = Building(
+            listOf(setOf(
+                Generator("elerium"), Chip("elerium"),
+                Generator("dilithium"), Chip("dilithium"),
+                Generator("thulium"), Chip("thulium"),
+                Generator("plutonium"), Generator("strontium")),
+            setOf(Chip("plutonium"), Chip("strontium"),),
+            setOf(Generator("qpromethium"), Chip("qpromethium"), Generator("ruthenium"), Chip("ruthenium"),),
+            setOf()
+            )
+        )
+        return building.bfs()
+    }
 
-        if (hash.contains(building.hashKey()) ) {
-            return hash[building.hashKey()]!!
-        }
+    private fun Building.bfs(): Int {
+        var count = 0L
+        val deque = ArrayDeque<Pair<Building, Int>>().apply { this.addLast(Pair(this@bfs, 0)) }
+        val alreadySeen = mutableSetOf<String>()
 
-        if (building.minimalStepsToTop() >= shortestSoFar) {
-            return 999_999_999
-        }
-
-        val visited = alreadySeen + building.hashKey()
-        var shortest = 999_999_999
-        val allMoves = building.elevatorCandidates()
-        allMoves.forEach { move ->
-            building.doMove(move)
-            if (building.hashKey() !in visited) {
-                val tmp = solve(visited, min (shortest, shortestSoFar) )
-                shortest = min(shortest,tmp)
+        while (deque.isNotEmpty()) {
+            count++
+            val (building, stepsDone) = deque.removeFirst()
+            if (building.allOnTop()) {
+                println("nodes visited: $count")
+                return stepsDone
             }
-            building.undoMove(move)
+            building
+                .elevatorCandidates()
+                .map { move -> building.doMove(move) }
+                .filter { building -> building.hashKey() !in alreadySeen }.forEach { building ->
+                    alreadySeen += building.hashKey()
+                    deque.addLast(Pair(building, stepsDone + 1))
+                }
         }
-        if (shortest < 10000)
-            hash[building.hashKey()] = shortest+1
-        return shortest+1
+        println("nodes visited: $count")
+        return -1
     }
 }
 
@@ -61,59 +79,55 @@ data class Generator(override val name: String): Component(name) {
 
 data class Move(val deltaFloor: Int, val components: List<Component>)
 
-//The first floor contains a thulium generator, a thulium-compatible microchip, a plutonium generator, and a strontium generator.
-//The second floor contains a plutonium-compatible microchip and a strontium-compatible microchip.
-//The third floor contains a promethium generator, a promethium-compatible microchip, a ruthenium generator, and a ruthenium-compatible microchip.
-//The fourth floor contains nothing relevant.
-
-class Building(test: Boolean) {
-    private val floors: List<MutableSet<Component>> = if (test) {
-        listOf(
-            mutableSetOf(Chip("hydrogen"), Chip("lithium")),
-            mutableSetOf(Generator("hydrogen")),
-            mutableSetOf(Generator("lithium")),
-            mutableSetOf()
-        )
-    } else {
-        listOf(
-            mutableSetOf(Generator("thulium"), Chip("thulium"), Generator("plutonium"), Generator("strontium")),
-            mutableSetOf(Chip("plutonium"),Chip("strontium"),),
-            mutableSetOf(Generator("qpromethium"),Chip("qpromethium"),Generator("ruthenium"),Chip("ruthenium"),),
-            mutableSetOf()
-        )
-    }
-
-    private var elevatorPos = 0
+class Building(private val floors: List<Set<Component>>, private val elevatorPos: Int=0) {
 
     override fun toString(): String {
         return "E$elevatorPos | ${floorString(0)} | ${floorString(1)} | ${floorString(2)} | ${floorString(3)}"
     }
 
     fun hashKey(): String {
-        return "$elevatorPos|${floors.hashCode()}"
-    }
+//        return "$elevatorPos|${floors.hashCode()}"
+        val indexer = mutableMapOf<Char, Int>()
+        var i = 1
+        floors.forEach { floor ->
+            floor.forEach { component ->
+                if (component is Chip) {
+                    indexer[component.name[0]] = i
+                    i*=2
+                }
+            }
+        }
+        val maxI = i
+        val floorMax = maxI * 8
+        val sumList = floors.mapIndexed { floorIndex, floor ->
+            floor.sumOf { component ->  indexer[component.name[0]]!! + if (component is Chip) 0 else maxI }
+        }
+        val total = sumList.joinToString("-")
 
-    override fun hashCode(): Int {
-        return "$elevatorPos|${floors.hashCode()}".hashCode()
-    }
+//        var total = 0
+//        floors.forEachIndexed { floorIndex, floor ->
+//            total += floorMax * floorIndex +
+//                    floor.sumOf { component -> indexer[component.name[0]]!! + if (component is Chip) 0 else maxI }
+//        }
 
+        return "$elevatorPos|$total"
+    }
 
     private fun floorString(nr: Int) = floors[nr].sortedBy { it.name }.joinToString(",")
 
-    fun doMove(move: Move) {
-        floors[elevatorPos] -= move.components
-        elevatorPos += move.deltaFloor
-        floors[elevatorPos] += move.components
-    }
-
-    fun undoMove(move: Move) {
-        floors[elevatorPos] -= move.components
-        elevatorPos -= move.deltaFloor
-        floors[elevatorPos] += move.components
+    fun doMove(move: Move): Building {
+        return Building(
+            floors = floors.mapIndexed { index, floor ->
+                when (index) {
+                    elevatorPos -> floor - move.components
+                    elevatorPos + move.deltaFloor -> floor + move.components
+                    else -> floor
+                } },
+            elevatorPos = elevatorPos + move.deltaFloor)
     }
 
     fun allOnTop() =
-        floors[3].size == 4
+        floors[0].isEmpty() && floors[1].isEmpty() && floors[2].isEmpty()
 
     fun elevatorCandidates(): List<Move> {
         val currentFloor = floors[elevatorPos]
@@ -136,8 +150,5 @@ class Building(test: Boolean) {
 
     private fun Set<Component>.generatorNames() =
         this.filterIsInstance<Generator>().map{it.name}.toSet()
-
-    fun minimalStepsToTop() =
-        3 - elevatorPos
 
 }
