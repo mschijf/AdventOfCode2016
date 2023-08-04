@@ -1,5 +1,7 @@
 package tool.mylambdas
 
+import java.security.MessageDigest
+
 
 fun CharSequence.distinct(): String {
     val result = StringBuilder()
@@ -20,4 +22,27 @@ fun String.substringBetween(afterDelimeter: String, beforeDelimter: String): Str
 
 fun CharSequence.hasOnlyDigits(): Boolean {
     return this.all{ch -> ch.isDigit()}
+}
+
+fun String.toMD5Hexadecimal(): String {
+    return MessageDigest.getInstance("MD5").digest(this.toByteArray()).toHexString()
+}
+
+private fun ByteArray.toHexString() : String {
+    val builder = StringBuilder()
+
+    for (b in this) {
+        builder.append(b.toHexString())
+    }
+
+    return builder.toString()
+}
+
+private val HEX_CHARS = arrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f')
+
+private fun Byte.toHexString() : String {
+    val thisAsInt = this.toInt()
+    val resultChar2 = HEX_CHARS[thisAsInt and 0x0f]
+    val resultChar1 = HEX_CHARS[thisAsInt shr 4 and 0x0f]
+    return "$resultChar1$resultChar2"
 }
