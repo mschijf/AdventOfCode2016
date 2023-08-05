@@ -1,13 +1,9 @@
 package tool.collectionspecials
 
-fun <T>emptyCircularList(): CircularLinkedList<T> {
-    return CircularLinkedList<T>()
-}
-
-class CircularLinkedList<T>:Iterable<T> {
+class MutableCircularLinkedList<T>:Iterable<T> {
 
     private var first: Node? = null
-    fun firstOrNull() = first
+    fun firstNodeOrNull() = first
 
     var size = 0
         private set
@@ -15,7 +11,8 @@ class CircularLinkedList<T>:Iterable<T> {
     fun isEmpty() = size == 0
 
     /**
-     * add an element before the first element ever inserted
+     * add an element at the end of the list, which is the same as before the first element ever inserted
+     *
      * if list is empty, then it will be the first element
      *
      * returns: the node including the element
@@ -24,7 +21,7 @@ class CircularLinkedList<T>:Iterable<T> {
         return if (first == null) {
             addFirst(element)
         } else {
-            addBefore(firstOrNull()!!, element)
+            addBefore(firstNodeOrNull()!!, element)
         }
     }
 
@@ -81,23 +78,22 @@ class CircularLinkedList<T>:Iterable<T> {
         if (size == 0) {
             first = null
         }
-        return true
-    }
+        nodeToBeRemoved.prev = nodeToBeRemoved
+        nodeToBeRemoved.next = nodeToBeRemoved
 
-    /**
-     * returns the data of the given node
-     */
-    fun get(p: Node): T {
-        return p.data
+        return true
     }
 
     override fun toString() = this.joinToString(" ")
 
-    inner class Node(val data: T, pprev: Node?=null, pnext: Node?=null) {
+    inner class Node(var data: T, pprev: Node?=null, pnext: Node?=null) {
         var prev: Node = pprev ?: this
         var next: Node = pnext ?: this
 
-        fun plus(steps: Int): Node {
+        operator fun plus(steps: Int): Node {
+            if (size == 0)
+                throw Exception("List is empty")
+
             var current = this
             if (steps >= 0) {
                 repeat(steps % size) { current = current.next }
@@ -107,7 +103,7 @@ class CircularLinkedList<T>:Iterable<T> {
             return current
         }
 
-        fun minus(steps: Int): Node {
+        operator fun minus(steps: Int): Node {
             return plus(-steps)
         }
 
@@ -116,8 +112,8 @@ class CircularLinkedList<T>:Iterable<T> {
 
     override fun iterator(): Iterator<T>  = CircularLinkedListIterator(this)
 
-    inner class CircularLinkedListIterator(private val cll: CircularLinkedList<T>): Iterator<T> {
-        private var current = firstOrNull()
+    inner class CircularLinkedListIterator(private val cll: MutableCircularLinkedList<T>): Iterator<T> {
+        private var current = firstNodeOrNull()
         private var neverIterated = true
 
         override fun hasNext(): Boolean {
@@ -125,7 +121,7 @@ class CircularLinkedList<T>:Iterable<T> {
                 return false
             if (neverIterated)
                 return true
-            return current !== cll.firstOrNull()
+            return current !== cll.firstNodeOrNull()
         }
 
         override fun next(): T {

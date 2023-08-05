@@ -1,6 +1,6 @@
 package adventofcode2016
 
-import tool.collectionspecials.CircularLinkedList
+import tool.collectionspecials.MutableCircularLinkedList
 
 fun main() {
     Day19(test=false).showResult()
@@ -11,52 +11,46 @@ class Day19(test: Boolean) : PuzzleSolverAbstract(test) {
     private val numberOfElves = if (test) 5 else 3_005_290
 
     override fun resultPartOne(): Any {
-        val elfList = CircularLinkedList<Pair<Int, Int>>()
-        (1..numberOfElves).forEach { elfPos ->
-            elfList.add(Pair(elfPos, 1))
-        }
 
-        var elfPos = elfList.firstOrNull()!!
-        while (true) {
-            if (elfPos.data.second == numberOfElves)
-                return elfPos.data.first
+        val elfList = initElfList()
+
+        var elfPos = elfList.firstNodeOrNull()!!
+        while (elfList.size != 1) {
             val nextPos = elfPos.plus(1)
-            val newPos = elfList.addBefore(elfPos, Pair(elfPos.data.first, elfPos.data.second + nextPos.data.second))
-            elfList.removeAt(elfPos)
+            elfPos.data = Pair(elfPos.data.first, elfPos.data.second + nextPos.data.second)
             elfList.removeAt(nextPos)
-            elfPos = newPos.plus(1)
+            elfPos = elfPos.plus(1)
         }
-        return -1
+        return elfList.first().first
     }
 
     override fun resultPartTwo(): Any {
-        val elfList = CircularLinkedList<Pair<Int, Int>>()
-        (1..numberOfElves).forEach { elfPos ->
-            elfList.add(Pair(elfPos, 1))
-        }
+        val elfList = initElfList()
 
-        var elfPos = elfList.firstOrNull()!!
+        var elfPos = elfList.firstNodeOrNull()!!
         var opposite = elfPos.plus(elfList.size/2)
 
-        while (true) {
-//            println(elfList.map{it.first}.joinToString())
-//            println("    ELFPOS: ${elfPos.data.first}, OPPOSITE: ${opposite.data.first}")
-            if (elfPos.data.second == numberOfElves)
-                return elfPos.data.first
-
+        while (elfList.size != 1) {
             val stealFromElf = opposite
             opposite = opposite.plus(if (elfList.size % 2 == 1) 1 else -1)
             elfList.removeAt(stealFromElf)
 
             val presentStolen = stealFromElf.data.second
-            val newPos = elfList.addBefore(elfPos, Pair(elfPos.data.first, elfPos.data.second + presentStolen))
-            elfList.removeAt(elfPos)
-            elfPos = newPos
+            elfPos.data = Pair(elfPos.data.first, elfPos.data.second + presentStolen)
+            //elfList[elfPos] = Pair(elfPos.data.first, elfPos.data.second + presentStolen)
 
             elfPos = elfPos.plus(1)
             opposite = opposite.plus( 1 )
         }
-        return -1
+        return elfList.first().first
+    }
+
+    private fun initElfList(): MutableCircularLinkedList<Pair<Int, Int>> {
+        val cll = MutableCircularLinkedList<Pair<Int, Int>>()
+        (1..numberOfElves).forEach { elfPos ->
+            cll.add(Pair(elfPos, 1))
+        }
+        return cll
     }
 }
 
