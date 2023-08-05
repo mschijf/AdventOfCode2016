@@ -2,7 +2,6 @@ package tool.collectionspecials
 
 import kotlin.math.absoluteValue
 import kotlin.random.Random
-import kotlin.random.nextUInt
 
 interface ListIndex {
     operator fun plus(steps: Int): ListIndex
@@ -12,27 +11,40 @@ interface ListIndex {
     operator fun dec(): ListIndex
 }
 
+/**
+ * Returns an empty [MutableCircularLinkedList] list.
+ */
 fun <T> emptyMutableCircularList() =
     MutableCircularLinkedList<T>()
 
+/**
+ * Returns a new [MutableCircularLinkedList] filled with all elements of this collection.
+ */
 fun <T> Iterable<T>.toMutableCircularLinkedList(): MutableCircularLinkedList<T> {
     val cll = emptyMutableCircularList<T>()
     this.forEach { item -> cll.add(item) }
     return cll
 }
 
-class MutableCircularLinkedList<T> :Iterable<T> {
+class MutableCircularLinkedList<T>: Collection<T> {
     private val cllId = Random.nextInt().absoluteValue
-
     private var first: Node? = null
     fun firstIndexOrNull(): ListIndex? = first
     fun firstIndex(): ListIndex = if (first != null) first!! else throw Exception("Circular list is Empty")
 
-    var size = 0
+    override var size = 0
         private set
 
-    fun isEmpty() =
-        size == 0
+    override fun isEmpty(): Boolean {
+        return size == 0
+    }
+
+    override fun containsAll(elements: Collection<T>) =
+        this.toSet().containsAll(elements)
+
+    override fun contains(element: T) =
+        this.any { elt -> element == elt}
+
     fun isNotEmpty() =
         !isEmpty()
 
