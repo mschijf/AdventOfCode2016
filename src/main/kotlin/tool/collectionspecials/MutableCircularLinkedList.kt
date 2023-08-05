@@ -1,14 +1,45 @@
 package tool.collectionspecials
 
-class MutableCircularLinkedList<T>:Iterable<T> {
+interface ListIndex {
+    operator fun plus(steps: Int): ListIndex
+    operator fun minus(steps: Int): ListIndex
+
+    operator fun inc(): ListIndex
+    operator fun dec(): ListIndex
+}
+
+fun <T> emptyMutableCircularList() =
+    MutableCircularLinkedList<T>()
+
+fun <T> Iterable<T>.toMutableCircularLinkedList(): MutableCircularLinkedList<T> {
+    val cll = emptyMutableCircularList<T>()
+    this.forEach { item -> cll.add(item) }
+    return cll
+}
+
+class MutableCircularLinkedList<T> :Iterable<T> {
 
     private var first: Node? = null
-    fun firstNodeOrNull() = first
+    fun firstIndexOrNull(): ListIndex? = first
+    fun firstIndex(): ListIndex = if (first != null) first!! else throw Exception("Circular list is Empty")
 
     var size = 0
         private set
 
-    fun isEmpty() = size == 0
+    fun isEmpty() =
+        size == 0
+    fun isNotEmpty() =
+        !isEmpty()
+
+    operator fun get(listIndex: ListIndex) =
+        listIndex.asNode().data
+
+    operator fun set(listIndex: ListIndex, element:T): T {
+        val node = listIndex.asNode()
+        val prevElement = node.data
+        node.data = element
+        return prevElement
+    }
 
     /**
      * add an element at the end of the list, which is the same as before the first element ever inserted
@@ -17,81 +48,75 @@ class MutableCircularLinkedList<T>:Iterable<T> {
      *
      * returns: the node including the element
      */
-    fun add(element: T): Node {
-        return if (first == null) {
+    fun add(element: T) {
+        if (first == null) {
             addFirst(element)
         } else {
-            addBefore(firstNodeOrNull()!!, element)
+            add(firstIndexOrNull()!!, element)
         }
     }
 
-
-    private fun addFirst(element: T): Node {
+    private fun addFirst(element: T) {
         size++
         first = Node(element)
-        return first!!
     }
 
     /**
-     * add an element before the node referred by 'node'
-     * assumption: the node is in the list.
+     * Inserts an element into the list at the specified listIndex
+     * assumption: the listIndex exists
      *
-     * returns: the new node including the element
      */
-    fun addBefore(node: Node, element: T): Node {
+    fun add(listIndex: ListIndex, element: T) {
+        val node = listIndex.asNode()
+
         val new = Node(element, node.prev, node)
         val tmpPrev = new.prev
         val tmpNext = new.next
         tmpPrev.next = new
         tmpNext.prev = new
         size++
-        return new
     }
 
     /**
-     * add an element after the node referred by 'node'
-     * assumption: the node is in the list.
+     * removes the element at 'listIndex'
+     * assumption: the listIndex exists
      *
-     * returns: the new node including the element
+     * returns the data that was on this listIndex
      */
-    fun addAfter(node: Node, element: T): Node {
-        val new = Node(element, node, node.next)
-        val tmpPrev = new.prev
-        val tmpNext = new.next
-        tmpPrev.next = new
-        tmpNext.prev = new
-        size++
-        return new
-    }
+    fun removeAt(listIndex: ListIndex): T {
+        val node = listIndex.asNode()
 
-
-    /**
-     * removes 'nodeToBeRemoved'
-     */
-    fun removeAt(nodeToBeRemoved: Node): Boolean {
-        nodeToBeRemoved.prev.next = nodeToBeRemoved.next
-        nodeToBeRemoved.next.prev = nodeToBeRemoved.prev
-        if (first == nodeToBeRemoved) {
-            first = nodeToBeRemoved.next
+        node.prev.next = node.next
+        node.next.prev = node.prev
+        if (first == node) {
+            first = node.next
         }
         size--
         if (size == 0) {
             first = null
         }
-        nodeToBeRemoved.prev = nodeToBeRemoved
-        nodeToBeRemoved.next = nodeToBeRemoved
+        node.prev = node
+        node.next = node
 
-        return true
+        return node.data
     }
 
-    override fun toString() = this.joinToString(" ")
+    override fun toString() =
+        this.joinToString(" ")
 
-    inner class Node(var data: T, pprev: Node?=null, pnext: Node?=null) {
+    override fun iterator(): Iterator<T>  =
+        CircularLinkedListIterator(this)
+
+    private fun ListIndex.asNode() =
+        this as MutableCircularLinkedList<T>.Node
+
+
+    private inner class Node(var data: T, pprev: Node?=null, pnext: Node?=null): ListIndex {
         var prev: Node = pprev ?: this
         var next: Node = pnext ?: this
 
-        operator fun plus(steps: Int): Node {
-            if (size == 0)
+        override operator fun plus(steps: Int): ListIndex {
+            if (this@MutableCircularLinkedList.isEmpty())
                 throw Exception("List is empty")
 
             var current = this
@@ -103,17 +128,21 @@ class MutableCircularLinkedList<T>:Iterable<T> {
             return current
         }
 
-        operator fun minus(steps: Int): Node {
-            return plus(-steps)
-        }
+        override operator fun minus(steps: Int) =
+            plus(-steps)
 
-        override fun toString() = data.toString()
+        override fun inc() =
+            next
+
+        override fun dec() =
+            prev
+
+        override fun toString() =
+            data.toString()
     }
 
-    override fun iterator(): Iterator<T>  = CircularLinkedListIterator(this)
-
     inner class CircularLinkedListIterator(private val cll: MutableCircularLinkedList<T>): Iterator<T> {
-        private var current = firstNodeOrNull()
+        private var current = firstIndexOrNull()
         private var neverIterated = true
 
         override fun hasNext(): Boolean {
@@ -121,15 +150,15 @@ class MutableCircularLinkedList<T>:Iterable<T> {
                 return false
             if (neverIterated)
                 return true
-            return current !== cll.firstNodeOrNull()
+            return current !== cll.firstIndexOrNull()
         }
 
         override fun next(): T {
             if (!hasNext())
                 throw Exception("No next on CycledLinkedList iterator")
             neverIterated = false
-            val data = current!!.data
-            current = current!!.next
+            val data = cll[current!!]
+            current = current!! + 1
             return data
         }
     }
