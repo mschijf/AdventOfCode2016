@@ -43,7 +43,7 @@ class Day17(test: Boolean) : PuzzleSolverAbstract(test) {
 
     private fun solvePart2(): Int {
         var maxPath = -1
-        val queue = ArrayDeque<Pair<Point, String>>().apply { this.addLast(Pair(pos(0,0), "")) }
+        val queue = ArrayDeque<Pair<Point, String>>().apply { this.addLast(Pair(startPos, "")) }
         while (queue.isNotEmpty()) {
             val (currentPos, pathWalked) = queue.removeFirst()
             if (currentPos == endPos) {
