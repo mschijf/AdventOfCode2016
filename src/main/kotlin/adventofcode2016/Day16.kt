@@ -42,12 +42,12 @@ class Day16(test: Boolean) : PuzzleSolverAbstract(test) {
     private fun String.checkSum(): String {
         var checksum = this
         while (checksum.length % 2 == 0) {
-            checksum = checksum.checkSumRound()
+            checksum = checksum.checkSumIteration()
         }
         return checksum
     }
 
-    private fun String.checkSumRound(): String {
+    private fun String.checkSumIteration(): String {
         val b = StringBuilder()
         for (i in indices step 2) {
             b.append(if (this[i] == this[i+1]) "1" else "0")
@@ -55,12 +55,8 @@ class Day16(test: Boolean) : PuzzleSolverAbstract(test) {
         return b.toString()
     }
 
-//    private fun String.checkSum(): String {
-//        var checksum = this
-//        while (checksum.length % 2 == 0) {
-//            checksum = checksum.chunked(2).joinToString("") { if (it[0] == it[1]) "1" else "0" }
-//        }
-//        return checksum
+//    private fun String.checkSumIteration(): String {
+//            return checksum.chunked(2).joinToString("") { if (it[0] == it[1]) "1" else "0" }
 //    }
 
 }
