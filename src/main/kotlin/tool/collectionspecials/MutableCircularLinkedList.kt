@@ -1,5 +1,9 @@
 package tool.collectionspecials
 
+import kotlin.math.absoluteValue
+import kotlin.random.Random
+import kotlin.random.nextUInt
+
 interface ListIndex {
     operator fun plus(steps: Int): ListIndex
     operator fun minus(steps: Int): ListIndex
@@ -18,6 +22,7 @@ fun <T> Iterable<T>.toMutableCircularLinkedList(): MutableCircularLinkedList<T> 
 }
 
 class MutableCircularLinkedList<T> :Iterable<T> {
+    private val cllId = Random.nextInt().absoluteValue
 
     private var first: Node? = null
     fun firstIndexOrNull(): ListIndex? = first
@@ -58,8 +63,9 @@ class MutableCircularLinkedList<T> :Iterable<T> {
 
     private fun addFirst(element: T) {
         size++
-        first = Node(element)
+        first = newNode(element, null, null)
     }
+
 
     /**
      * Inserts an element into the list at the specified listIndex
@@ -69,7 +75,7 @@ class MutableCircularLinkedList<T> :Iterable<T> {
     fun add(listIndex: ListIndex, element: T) {
         val node = listIndex.asNode()
 
-        val new = Node(element, node.prev, node)
+        val new = newNode(element, node.prev, node)
         val tmpPrev = new.prev
         val tmpNext = new.next
         tmpPrev.next = new
@@ -97,6 +103,7 @@ class MutableCircularLinkedList<T> :Iterable<T> {
         }
         node.prev = node
         node.next = node
+        node.decouple()
 
         return node.data
     }
@@ -107,11 +114,18 @@ class MutableCircularLinkedList<T> :Iterable<T> {
     override fun iterator(): Iterator<T>  =
         CircularLinkedListIterator(this)
 
-    private fun ListIndex.asNode() =
-        this as MutableCircularLinkedList<T>.Node
+    private fun newNode(data: T, pprev: Node?, pnext: Node?) =
+        Node(data, pprev, pnext, cllId)
 
+    private fun ListIndex.asNode() : Node {
+        val node = this as MutableCircularLinkedList<T>.Node
+        if (node.cllId != cllId) {
+            throw Exception ("List Index not belonging to (Circular)LinkedList")
+        }
+        return node
+    }
 
-    private inner class Node(var data: T, pprev: Node?=null, pnext: Node?=null): ListIndex {
+    private inner class Node(var data: T, pprev: Node?, pnext: Node?, var cllId: Int): ListIndex {
         var prev: Node = pprev ?: this
         var next: Node = pnext ?: this
 
@@ -139,6 +153,11 @@ class MutableCircularLinkedList<T> :Iterable<T> {
 
         override fun toString() =
             data.toString()
+
+        fun decouple() {
+            cllId = -1
+        }
+
     }
 
     inner class CircularLinkedListIterator(private val cll: MutableCircularLinkedList<T>): Iterator<T> {
