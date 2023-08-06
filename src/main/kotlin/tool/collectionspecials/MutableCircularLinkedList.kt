@@ -3,29 +3,6 @@ package tool.collectionspecials
 import kotlin.math.absoluteValue
 import kotlin.random.Random
 
-interface ListIndex {
-    operator fun plus(steps: Int): ListIndex
-    operator fun minus(steps: Int): ListIndex
-
-    operator fun inc(): ListIndex
-    operator fun dec(): ListIndex
-}
-
-/**
- * Returns an empty [MutableCircularLinkedList] list.
- */
-fun <T> emptyMutableCircularList() =
-    MutableCircularLinkedList<T>()
-
-/**
- * Returns a new [MutableCircularLinkedList] filled with all elements of this collection.
- */
-fun <T> Iterable<T>.toMutableCircularLinkedList(): MutableCircularLinkedList<T> {
-    val cll = emptyMutableCircularList<T>()
-    this.forEach { item -> cll.add(item) }
-    return cll
-}
-
 class MutableCircularLinkedList<T>: MutableCollection<T> {
     private var cllId: Int = 0
     private var first: Node? = null
@@ -35,20 +12,20 @@ class MutableCircularLinkedList<T>: MutableCollection<T> {
 
     init { clear() }
 
-    fun firstIndexOrNull(): ListIndex? =
+    fun firstIndexOrNull(): LinkedListIndexPointer? =
         first
 
-    fun firstIndex(): ListIndex =
+    fun firstIndex(): LinkedListIndexPointer =
         if (first != null) first!! else throw Exception("Circular list is Empty")
 
     override fun isEmpty() =
         size == 0
 
-    operator fun get(listIndex: ListIndex) =
-        listIndex.asNode().data
+    operator fun get(linkedListIndexPointer: LinkedListIndexPointer) =
+        linkedListIndexPointer.asNode().data
 
-    operator fun set(listIndex: ListIndex, element:T): T {
-        val node = listIndex.asNode()
+    operator fun set(linkedListIndexPointer: LinkedListIndexPointer, element:T): T {
+        val node = linkedListIndexPointer.asNode()
         val prevElement = node.data
         node.data = element
         return prevElement
@@ -71,8 +48,8 @@ class MutableCircularLinkedList<T>: MutableCollection<T> {
      * assumption: the listIndex exists
      *
      */
-    fun add(listIndex: ListIndex, element: T): Boolean {
-        val node = listIndex.asNode()
+    fun add(linkedListIndexPointer: LinkedListIndexPointer, element: T): Boolean {
+        val node = linkedListIndexPointer.asNode()
 
         val new = newNode(element, node.prev, node)
         val tmpPrev = new.prev
@@ -88,8 +65,8 @@ class MutableCircularLinkedList<T>: MutableCollection<T> {
      *
      * returns the data that was on this listIndex
      */
-    fun removeAt(listIndex: ListIndex): T {
-        val node = listIndex.asNode()
+    fun removeAt(linkedListIndexPointer: LinkedListIndexPointer): T {
+        val node = linkedListIndexPointer.asNode()
 
         node.prev.next = node.next
         node.next.prev = node.prev
@@ -116,7 +93,7 @@ class MutableCircularLinkedList<T>: MutableCollection<T> {
         return false
     }
 
-    fun firstIndexOfOrNull(element: T) : ListIndex? {
+    fun firstIndexOfOrNull(element: T) : LinkedListIndexPointer? {
         if (isEmpty())
             return null
         if (this[firstIndex()] == element)
@@ -131,7 +108,7 @@ class MutableCircularLinkedList<T>: MutableCollection<T> {
     private fun newNode(data: T, pprev: Node?, pnext: Node?) =
         Node(data, pprev, pnext, cllId)
 
-    private fun ListIndex.asNode() : Node {
+    private fun LinkedListIndexPointer.asNode() : Node {
         val node = this as MutableCircularLinkedList<T>.Node
         if (node.cllId != this@MutableCircularLinkedList.cllId) {
             throw Exception ("List Index not belonging to (Circular)LinkedList")
@@ -196,11 +173,11 @@ class MutableCircularLinkedList<T>: MutableCollection<T> {
 
     //==================================================================================================================
 
-    private inner class Node(var data: T, pprev: Node?, pnext: Node?, var cllId: Int): ListIndex {
+    private inner class Node(var data: T, pprev: Node?, pnext: Node?, var cllId: Int): LinkedListIndexPointer {
         var prev: Node = pprev ?: this
         var next: Node = pnext ?: this
 
-        override operator fun plus(steps: Int): ListIndex {
+        override operator fun plus(steps: Int): LinkedListIndexPointer {
             if (this@MutableCircularLinkedList.isEmpty())
                 throw Exception("List is empty")
 
@@ -234,8 +211,8 @@ class MutableCircularLinkedList<T>: MutableCollection<T> {
     //==================================================================================================================
 
     inner class CircularLinkedListIterator(private val cll: MutableCircularLinkedList<T>): MutableIterator<T> {
-        private var cursor:ListIndex? = null
-        private var lastReturned:ListIndex? = null
+        private var cursor:LinkedListIndexPointer? = null
+        private var lastReturned:LinkedListIndexPointer? = null
 
         override fun hasNext() =
             (cll.size > 0) && (cursor == null || cursor !== cll.firstIndexOrNull())
