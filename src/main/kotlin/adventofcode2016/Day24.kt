@@ -3,7 +3,6 @@ package adventofcode2016
 import tool.coordinate.twodimensional.Point
 import tool.coordinate.twodimensional.pos
 import tool.mylambdas.collectioncombination.mapCombinedItems
-import kotlin.math.min
 
 fun main() {
     Day24(test=false).showResult()
@@ -36,7 +35,7 @@ class Day24(test: Boolean) : PuzzleSolverAbstract(test) {
     }
 
     private fun shortestPath(from: Point, to: Point) : Int {
-        val alreadySeen = mutableSetOf<Point>(from)
+        val alreadySeen = mutableSetOf(from)
         val queue = ArrayDeque<Pair<Point, Int>>().apply { this.add( Pair(from,0) ) }
         while (queue.isNotEmpty()) {
             val (currentPos, stepsDone) = queue.removeFirst()
@@ -53,17 +52,17 @@ class Day24(test: Boolean) : PuzzleSolverAbstract(test) {
     }
 
     private fun shortestPathToAll(from: Char = '0', backToStart: Boolean = false, pathDone: Set<Char> = setOf(from)) : Int {
-        if (pathDone.size == numbers.keys.size) {
-            return if (backToStart) from.distanceTo('0') else 0
-        }
+        return if (pathDone.size == numbers.keys.size) {
 
-        var minPath = Int.MAX_VALUE
-        numbers.keys.filter { it != from }.filter { it !in pathDone }.forEach {newNumber ->
-            val tmp = shortestPathToAll(newNumber, backToStart, pathDone+newNumber)
-            minPath = min(minPath, tmp + from.distanceTo(newNumber))
-        }
+            if (backToStart) from.distanceTo('0') else 0
 
-        return minPath
+        } else {
+
+            numbers.keys.filter { number -> number !in pathDone }.minOf { newNumber ->
+                shortestPathToAll(newNumber, backToStart, pathDone+newNumber) + from.distanceTo(newNumber)
+            }
+
+        }
     }
 
     private fun Char.distanceTo(other:Char) =
