@@ -1,6 +1,6 @@
 package adventofcode2016
 
-import tool.collectionspecials.toMutableCircularLinkedList
+import tool.collectionspecials.toCircularLinkedList
 
 fun main() {
     Day19(test=false).showResult()
@@ -42,7 +42,7 @@ class Day19(test: Boolean) : PuzzleSolverAbstract(test) {
     }
 
     private fun initElfList() =
-        (1..numberOfElves).map { Pair(it, 1) }.toMutableCircularLinkedList()
+        (1..numberOfElves).map { Pair(it, 1) }.toCircularLinkedList()
 
 }
 

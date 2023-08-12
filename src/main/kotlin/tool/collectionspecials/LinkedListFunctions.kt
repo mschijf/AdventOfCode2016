@@ -1,17 +1,25 @@
 package tool.collectionspecials
 
 /**
- * Returns an empty [MutableCircularLinkedList] list.
+ * Returns an empty [CircularLinkedList] list.
  */
-fun <T> emptyMutableCircularList() =
-    MutableCircularLinkedList<T>()
+fun <T> emptyCircularLinkedList() =
+    CircularLinkedList<T>()
 
 /**
- * Returns a new [MutableCircularLinkedList] filled with all elements of this collection.
+ * Returns a new [CircularLinkedList] filled with all elements of this collection.
  */
-fun <T> Iterable<T>.toMutableCircularLinkedList(): MutableCircularLinkedList<T> {
-    val cll = emptyMutableCircularList<T>()
+fun <T> Iterable<T>.toCircularLinkedList(): CircularLinkedList<T> {
+    val cll = emptyCircularLinkedList<T>()
     this.forEach { item -> cll.add(item) }
     return cll
 }
 
+fun <T> emptyLinkedList() =
+    LinkedList<T>()
+
+fun <T> Iterable<T>.toLinkedList(): LinkedList<T> {
+    val ll = emptyLinkedList<T>()
+    this.forEach { item -> ll.add(item) }
+    return ll
+}

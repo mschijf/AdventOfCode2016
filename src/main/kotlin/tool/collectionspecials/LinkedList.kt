@@ -3,9 +3,17 @@ package tool.collectionspecials
 import kotlin.math.absoluteValue
 import kotlin.random.Random
 
-class MutableCircularLinkedList<T>: MutableCollection<T> {
+
+//todo: replace all exceptions by linkedlistexceptions
+//todo: unit testing
+//todo: unit testing node++ for empty list
+//todo: build circular linked list as subclass of linkedlist
+//todo: toString als [1->2->3]  ip [1,2,3]
+
+class LinkedList<T>: MutableCollection<T> {
     private var cllId: Int = 0
     private var first: Node? = null
+    private var last: Node? = null
 
     override var size = 0
         private set
@@ -15,8 +23,13 @@ class MutableCircularLinkedList<T>: MutableCollection<T> {
     fun firstIndexOrNull(): LinkedListIndexPointer? =
         first
 
+    fun lastIndexOrNull(): LinkedListIndexPointer? =
+        last
+
     fun firstIndex(): LinkedListIndexPointer =
-        if (first != null) first!! else throw Exception("Circular list is Empty")
+        if (first != null) first!! else throw LinkedListException("List is Empty")
+    fun lastIndex(): LinkedListIndexPointer =
+        if (last != null) last!! else throw LinkedListException("List is Empty")
 
     override fun isEmpty() =
         size == 0
@@ -35,10 +48,22 @@ class MutableCircularLinkedList<T>: MutableCollection<T> {
         this.any { elt -> element == elt}
 
     override fun add(element: T) =
-        if (first == null) addFirst(element) else add(firstIndex(), element)
+        if (first == null) addFirst(element) else addAfterLast(element)
 
     private fun addFirst(element: T): Boolean {
+        check(first == null)
+
         first = newNode(element, null, null)
+        last = first
+        size++
+        return true
+    }
+
+    private fun addAfterLast(element: T): Boolean {
+        check (last != null)
+
+        last!!.next = newNode(element, last, null)
+        last = last!!.next
         size++
         return true
     }
@@ -52,10 +77,14 @@ class MutableCircularLinkedList<T>: MutableCollection<T> {
         val node = linkedListIndexPointer.asNode()
 
         val new = newNode(element, node.prev, node)
+        node.prev = new
         val tmpPrev = new.prev
-        val tmpNext = new.next
-        tmpPrev.next = new
-        tmpNext.prev = new
+        if (tmpPrev != null) {
+            tmpPrev.next = new
+        } else {
+            first = new
+        }
+
         size++
         return true
     }
@@ -68,17 +97,23 @@ class MutableCircularLinkedList<T>: MutableCollection<T> {
     fun removeAt(linkedListIndexPointer: LinkedListIndexPointer): T {
         val node = linkedListIndexPointer.asNode()
 
-        node.prev.next = node.next
-        node.next.prev = node.prev
         if (node == first) {
-            first = node.next
+            if (node == last) {
+                first = null
+                last = null
+            } else {
+                node.next!!.prev = null
+                first = node.next
+            }
+        } else if (node == last) {
+            node.prev!!.next = null
+            last = node.prev
+        } else {
+            node.prev!!.next = node.next
+            node.next!!.prev = node.prev
         }
         size--
-        if (size == 0) {
-            first = null
-        }
-        node.prev = node
-        node.next = node
+
         node.decouple()
 
         return node.data
@@ -93,73 +128,70 @@ class MutableCircularLinkedList<T>: MutableCollection<T> {
         return false
     }
 
-    fun firstIndexOfOrNull(element: T) : LinkedListIndexPointer? {
-        if (isEmpty())
-            return null
-        if (this[firstIndex()] == element)
-            return firstIndex()
+    fun firstIndexOfOrNull(element: T)
+        = firstIndexOfOrNullAfter(first, element)
 
-        var walker = firstIndex() + 1
-        while (walker != first && this[walker] != element)
-            walker++
+    private fun firstIndexOfOrNullAfter(node: Node?, element: T) : LinkedListIndexPointer? {
+        var walker = node
+        while (walker != null && this[walker] != element)
+            walker = walker.next
         return walker
     }
+
 
     private fun newNode(data: T, pprev: Node?, pnext: Node?) =
         Node(data, pprev, pnext, cllId)
 
     private fun LinkedListIndexPointer.asNode() : Node {
-        val node = this as MutableCircularLinkedList<T>.Node
-        if (node.cllId != this@MutableCircularLinkedList.cllId) {
-            throw Exception ("List Index not belonging to (Circular)LinkedList")
+        val node = this as LinkedList<T>.Node
+        if (node.cllId != this@LinkedList.cllId) {
+            throw LinkedListException ("List Index not belonging to (Circular)LinkedList")
         }
         return node
     }
 
     override fun toString() =
-        "[${this.joinToString(", ")}]"
+        "[${this.joinToString(" -> ")}]"
 
     override fun iterator(): MutableIterator<T> =
-        CircularLinkedListIterator(this)
+        LinkedListIterator(this)
 
     override fun retainAll(elements: Collection<T>): Boolean {
         var result = false
-        if (isEmpty())
-            return false
         val retainElements = elements.toSet()
 
-        var walker = firstIndex() + 1
-        while (walker != firstIndex()) {
-            if (this[walker] in retainElements) {
-                walker++
-            } else {
-                val toBeRemoved = walker
-                walker++
-                removeAt(toBeRemoved)
+        var walker = first
+        while (walker != null) {
+            val check = walker
+            walker = walker.next
+            if (this[check] !in retainElements) {
+                removeAt(check)
                 result = true
             }
         }
-
-        if (this[firstIndex()] !in retainElements) {
-            removeAt(firstIndex())
-            result = true
-        }
-
         return result
     }
 
     override fun removeAll(elements: Collection<T>): Boolean {
-        var atLeastOneRemoved = false
-        elements.forEach { element ->
-            val removed = remove(element)
-            atLeastOneRemoved = atLeastOneRemoved || removed
+        var result = false
+        val removeElements = elements.toSet()
+
+        var walker = first
+        while (walker != null) {
+            val check = walker
+            walker = walker.next
+            if (this[check] in removeElements) {
+                removeAt(check)
+                result = true
+            }
         }
-        return atLeastOneRemoved
+        return result
     }
 
     override fun clear() {
         size = 0
         first = null
+        last = null
         cllId = Random.nextInt().absoluteValue
     }
 
@@ -169,69 +201,71 @@ class MutableCircularLinkedList<T>: MutableCollection<T> {
     }
 
     override fun containsAll(elements: Collection<T>) =
-        this.toSet().isNotEmpty()
+        elements.toSet().all{ item -> this.contains(item) }
 
     //==================================================================================================================
 
-    private inner class Node(var data: T, pprev: Node?, pnext: Node?, var cllId: Int): LinkedListIndexPointer {
-        var prev: Node = pprev ?: this
-        var next: Node = pnext ?: this
+    private inner class Node(var data: T, var prev: Node?, var next: Node?, var cllId: Int): LinkedListIndexPointer {
 
         override operator fun plus(steps: Int): LinkedListIndexPointer {
-            if (this@MutableCircularLinkedList.isEmpty())
-                throw Exception("List is empty")
-
-            var current = this
+            var current: Node? = this
             if (steps >= 0) {
-                repeat(steps % size) { current = current.next }
+                var stepsToDo = steps
+                while (current != null && stepsToDo > 0) {
+                    current = current.next
+                    stepsToDo--
+                }
             } else {
-                repeat(-(steps % size)) { current = current.prev }
+                var stepsToDo = -steps
+                while (current != null && stepsToDo > 0) {
+                    current = current.prev
+                    stepsToDo--
+                }
             }
-            return current
+            return current?:throw LinkedListException("LinkedListIndexPointer out of bounds")
         }
 
         override operator fun minus(steps: Int) =
             plus(-steps)
 
         override fun inc() =
-            next
+            plus(1)
 
         override fun dec() =
-            prev
+            minus(1)
 
         override fun toString() =
             data.toString()
 
         fun decouple() {
+            next = null
+            prev = null
             cllId = -1
         }
+
 
     }
 
     //==================================================================================================================
 
-    inner class CircularLinkedListIterator(private val cll: MutableCircularLinkedList<T>): MutableIterator<T> {
-        private var cursor:LinkedListIndexPointer? = null
-        private var lastReturned:LinkedListIndexPointer? = null
+    inner class LinkedListIterator(private val cll: LinkedList<T>): MutableIterator<T> {
+        private var cursor:Node? = cll.first
+        private var lastReturned:Node? = null
 
         override fun hasNext() =
-            (cll.size > 0) && (cursor == null || cursor !== cll.firstIndexOrNull())
+            cursor != null
 
         override fun next(): T {
             if (!hasNext())
                 throw NoSuchElementException()
-            if (cursor == null)
-                cursor = cll.firstIndexOrNull()
             val data = cll[cursor!!]
             lastReturned = cursor
-            cursor = cursor!! + 1
+            cursor = cursor!!.next
             return data
         }
 
         override fun remove() {
             check(lastReturned != null)
-            if (lastReturned == firstIndexOrNull())
-                cursor = null
             cll.removeAt(lastReturned!!)
             lastReturned = null
         }
