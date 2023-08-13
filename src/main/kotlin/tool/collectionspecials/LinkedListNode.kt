@@ -1,9 +1,9 @@
 package tool.collectionspecials
 
-abstract class Node(open var prev: Node?, open var next: Node?): LinkedListPointer {
+abstract class LinkedListNode(var prev: LinkedListNode?, var next: LinkedListNode?): LinkedListPointer {
 
     override fun next(steps: Int): LinkedListPointer {
-        var current: Node? = this
+        var current: LinkedListNode? = this
         if (steps >= 0) {
             var stepsToDo = steps
             while (current != null && stepsToDo > 0) {
@@ -26,8 +26,10 @@ abstract class Node(open var prev: Node?, open var next: Node?): LinkedListPoint
     companion object {
         //todo: improve this node ??
         private val emptyNode = EmptyNode()
-        private class EmptyNode: Node(null, null) {
+        private class EmptyNode: LinkedListNode(null, null) {
             override fun pointsToListItem() = false
         }
     }
 }
+
+

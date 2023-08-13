@@ -4,8 +4,8 @@ package tool.collectionspecials
 
 open class LinkedList<T>: MutableCollection<T> {
 
-    internal var first: Node? = null
-    internal var last: Node? = null
+    internal var first: LinkedListNode? = null
+    internal var last: LinkedListNode? = null
 
     //todo: improve this
     override var size = 0
@@ -124,7 +124,7 @@ open class LinkedList<T>: MutableCollection<T> {
     fun firstIndexOfOrNull(element: T)
         = firstIndexOfOrNullAfter(first, element)
 
-    private fun firstIndexOfOrNullAfter(node: Node?, element: T) : LinkedListPointer? {
+    private fun firstIndexOfOrNullAfter(node: LinkedListNode?, element: T) : LinkedListPointer? {
         var walker = node
         while (walker != null && this[walker] != element)
             walker = walker.next
@@ -132,17 +132,17 @@ open class LinkedList<T>: MutableCollection<T> {
     }
 
 
-    protected open fun newNode(data: T, pprev: Node?, pnext: Node?) =
+    protected open fun newNode(data: T, pprev: LinkedListNode?, pnext: LinkedListNode?) =
         DataNode(data, pprev, pnext, this)
 
     private fun LinkedListPointer.asDataNode() : DataNode<T> {
-        val node: Node = this as Node
-        if (!node.pointsToListItem()) {
+        val linkedListNode: LinkedListNode = this as LinkedListNode
+        if (!linkedListNode.pointsToListItem()) {
             throw LinkedListException ("Pointer does not point to a node (LinkedListNullPointer)")
         }
 
         @Suppress("UNCHECKED_CAST")
-        val dataNode = node as DataNode<T>
+        val dataNode = linkedListNode as DataNode<T>
         if (dataNode.owner != this@LinkedList) {
             throw LinkedListException ("Pointer does not point to a node on this List")
         }
@@ -202,35 +202,11 @@ open class LinkedList<T>: MutableCollection<T> {
     override fun containsAll(elements: Collection<T>) =
         elements.toSet().all{ item -> this.contains(item) }
 
-    //==================================================================================================================
-
-    inner class LinkedListIterator(private val cll: LinkedList<T>): MutableIterator<T> {
-        private var cursor:Node? = cll.first
-        private var lastReturned:Node? = null
-
-        override fun hasNext() =
-            cursor != null
-
-        override fun next(): T {
-            if (!hasNext())
-                throw NoSuchElementException()
-            val data = cll[cursor!!]
-            lastReturned = cursor
-            cursor = cursor!!.next
-            return data
-        }
-
-        override fun remove() {
-            check(lastReturned != null)
-            cll.removeAt(lastReturned!!)
-            lastReturned = null
-        }
-    }
 }
 
 //==================================================================================================================
 
-open class DataNode<T>(var data: T, prev: Node?, next: Node?, val owner: LinkedList<T>): Node(prev, next) {
+open class DataNode<T>(var data: T, prev: LinkedListNode?, next: LinkedListNode?, val owner: LinkedList<T>): LinkedListNode(prev, next) {
     override fun toString() =
         data.toString()
 
@@ -241,9 +217,6 @@ open class DataNode<T>(var data: T, prev: Node?, next: Node?, val owner: LinkedL
         next = null
         prev = null
     }
-
 }
-
-
 
 
