@@ -1,8 +1,5 @@
 package tool.collectionspecials
 
-import kotlin.math.absoluteValue
-import kotlin.random.Random
-
 //todo: build circular linked list as subclass of linkedlist
 
 open class LinkedList<T>: MutableCollection<T> {
@@ -135,7 +132,7 @@ open class LinkedList<T>: MutableCollection<T> {
     }
 
 
-    internal open fun newNode(data: T, pprev: Node?, pnext: Node?) =
+    protected open fun newNode(data: T, pprev: Node?, pnext: Node?) =
         DataNode(data, pprev, pnext, this)
 
     private fun LinkedListPointer.asDataNode() : DataNode<T> {
@@ -146,7 +143,7 @@ open class LinkedList<T>: MutableCollection<T> {
 
         @Suppress("UNCHECKED_CAST")
         val dataNode = node as DataNode<T>
-        if (dataNode.ll != this@LinkedList) {
+        if (dataNode.owner != this@LinkedList) {
             throw LinkedListException ("Pointer does not point to a node on this List")
         }
         return dataNode
@@ -233,12 +230,18 @@ open class LinkedList<T>: MutableCollection<T> {
 
 //==================================================================================================================
 
-open class DataNode<T>(var data: T, prev: Node?, next: Node?, val ll: LinkedList<T>?): Node(prev, next) {
+open class DataNode<T>(var data: T, prev: Node?, next: Node?, val owner: LinkedList<T>): Node(prev, next) {
     override fun toString() =
         data.toString()
 
     override fun pointsToListItem() =
-        ll != null
+        owner != null
+
+    internal fun decouple() {
+        next = null
+        prev = null
+    }
+
 }
 
 
