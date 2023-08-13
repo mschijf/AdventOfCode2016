@@ -23,3 +23,9 @@ fun <T> Iterable<T>.toLinkedList(): LinkedList<T> {
     this.forEach { item -> ll.add(item) }
     return ll
 }
+
+fun <T> linkedListOf(vararg items: T): LinkedList<T> {
+    val ll = emptyLinkedList<T>()
+    items.forEach { item -> ll.add(item) }
+    return ll
+}

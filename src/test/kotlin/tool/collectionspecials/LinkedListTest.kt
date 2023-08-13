@@ -88,12 +88,14 @@ class LinkedListTest {
         val ll = (1..4).toLinkedList()
         var p = ll.firstIndex()
         assertEquals(1, ll[p])
-        p++
+        p = p.next()
         assertEquals(2, ll[p])
-        p++
+        p = p.next()
         assertEquals(3, ll[p])
-        p++
+        p = p.next()
         assertEquals(4, ll[p])
+        p = p.next()
+        assertThrows<LinkedListException> { ll[p] }
     }
 
     @Test
@@ -101,7 +103,7 @@ class LinkedListTest {
         val ll = (1..4).toLinkedList()
         var p = ll.firstIndex()
         ll[p] = 100
-        p++
+        p = p.next()
         ll[p] = 200
         p = ll.lastIndex()
         ll[p] = 400
@@ -164,8 +166,8 @@ class LinkedListTest {
         assertEquals(listOf(2,3), ll.toList())
 
         ll = (1..4).toLinkedList()
-        ll.removeAt(ll.firstIndex() + 1)
-        ll.removeAt(ll.lastIndex() - 1)
+        ll.removeAt(ll.firstIndex().next())
+        ll.removeAt(ll.lastIndex().prev())
         assertEquals(listOf(1,4), ll.toList())
     }
 
@@ -202,14 +204,14 @@ class LinkedListTest {
 
         ll = (1..4).toLinkedList()
         assertEquals(ll.firstIndex(), ll.firstIndexOfOrNull(1))
-        assertEquals(ll.firstIndex()+1, ll.firstIndexOfOrNull(2))
-        assertEquals(ll.firstIndex()+2, ll.firstIndexOfOrNull(3))
+        assertEquals(ll.firstIndex().next(), ll.firstIndexOfOrNull(2))
+        assertEquals(ll.firstIndex().next(2), ll.firstIndexOfOrNull(3))
         assertEquals(ll.lastIndex(), ll.firstIndexOfOrNull(4))
         assertNull(ll.firstIndexOfOrNull(100))
 
         ll = listOf(1, 1, 2, 2, 3, 4).toLinkedList()
         assertEquals(ll.firstIndex(), ll.firstIndexOfOrNull(1))
-        assertEquals(ll.firstIndex()+2, ll.firstIndexOfOrNull(2))
+        assertEquals(ll.firstIndex().next(2), ll.firstIndexOfOrNull(2))
     }
 
     @Test
@@ -274,17 +276,25 @@ class LinkedListTest {
     fun nodePointerTest() {
         val ll = listOf(1,2,3,4).toLinkedList()
         var p = ll.firstIndex()
-        assertThrows<LinkedListException> { p+4 }
-        assertThrows<LinkedListException> { p+5 }
-        assertThrows<LinkedListException> { p-1 }
-        assertEquals(ll.lastIndex(), p+3)
+        assertTrue(ll.firstIndex().pointsToListItem())
+        assertTrue(ll.firstIndex().next().pointsToListItem())
+        assertTrue(ll.firstIndex().next(2).pointsToListItem())
+        assertTrue(ll.firstIndex().next(3).pointsToListItem())
+        assertFalse(ll.firstIndex().next(4).pointsToListItem())
+        assertTrue(ll.lastIndex().prev().pointsToListItem())
+        assertTrue(ll.lastIndex().prev(2).pointsToListItem())
+        assertTrue(ll.lastIndex().prev(3).pointsToListItem())
+        assertFalse(ll.lastIndex().prev(4).pointsToListItem())
 
-        p++
-        assertThrows<LinkedListException> { p+3 }
-        assertThrows<LinkedListException> { p+4 }
-        assertThrows<LinkedListException> { p-2 }
-        assertEquals(ll.firstIndex(), p-1)
-        assertEquals(ll.lastIndex(), p+2)
+        p = ll.firstIndex().prev()
+        assertFalse(p.pointsToListItem())
+        p = ll.lastIndex().next()
+        assertFalse(p.pointsToListItem())
+
+        repeat(10) { p = p.next() }
+        assertFalse(p.pointsToListItem())
+
+
     }
 
     @Test

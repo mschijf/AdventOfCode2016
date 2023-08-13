@@ -1,21 +1,18 @@
 package tool.collectionspecials
 
-import java.io.UncheckedIOException
 import kotlin.math.absoluteValue
 import kotlin.random.Random
 
-//todo: conceptual thinking: what to do after you move your pointer next to last (return null? throw exception? return special Node?)
-
-//todo: unit testing node++ for empty list
 //todo: build circular linked list as subclass of linkedlist
 
-class LinkedList<T>: MutableCollection<T> {
-    private var cllId: Int = 0
-    private var first: Node? = null
-    private var last: Node? = null
+open class LinkedList<T>: MutableCollection<T> {
 
+    internal var first: Node? = null
+    internal var last: Node? = null
+
+    //todo: improve this
     override var size = 0
-        private set
+//        private set
 
     init { clear() }
 
@@ -34,10 +31,10 @@ class LinkedList<T>: MutableCollection<T> {
         size == 0
 
     operator fun get(linkedListPointer: LinkedListPointer) =
-        linkedListPointer.asNode().data
+        linkedListPointer.asDataNode().data
 
     operator fun set(linkedListPointer: LinkedListPointer, element:T): T {
-        val node = linkedListPointer.asNode()
+        val node = linkedListPointer.asDataNode()
         val prevElement = node.data
         node.data = element
         return prevElement
@@ -73,7 +70,7 @@ class LinkedList<T>: MutableCollection<T> {
      *
      */
     fun add(linkedListPointer: LinkedListPointer, element: T): Boolean {
-        val node = linkedListPointer.asNode()
+        val node = linkedListPointer.asDataNode()
 
         val new = newNode(element, node.prev, node)
         node.prev = new
@@ -94,7 +91,7 @@ class LinkedList<T>: MutableCollection<T> {
      * returns the data that was on this listIndex
      */
     fun removeAt(linkedListPointer: LinkedListPointer): T {
-        val node = linkedListPointer.asNode()
+        val node = linkedListPointer.asDataNode()
 
         if (node == first) {
             if (node == last) {
@@ -138,16 +135,21 @@ class LinkedList<T>: MutableCollection<T> {
     }
 
 
-    private fun newNode(data: T, pprev: Node?, pnext: Node?) =
-        Node(data, pprev, pnext, cllId)
+    internal open fun newNode(data: T, pprev: Node?, pnext: Node?) =
+        DataNode(data, pprev, pnext, this)
 
-    private fun LinkedListPointer.asNode() : Node {
-        @Suppress("UNCHECKED_CAST")
-        val node: Node = this as LinkedList<T>.Node
-        if (node.cllId != this@LinkedList.cllId) {
-            throw LinkedListException ("List Index not belonging to (Circular)LinkedList")
+    private fun LinkedListPointer.asDataNode() : DataNode<T> {
+        val node: Node = this as Node
+        if (!node.pointsToListItem()) {
+            throw LinkedListException ("Pointer does not point to a node (LinkedListNullPointer)")
         }
-        return node
+
+        @Suppress("UNCHECKED_CAST")
+        val dataNode = node as DataNode<T>
+        if (dataNode.ll != this@LinkedList) {
+            throw LinkedListException ("Pointer does not point to a node on this List")
+        }
+        return dataNode
     }
 
     override fun toString() =
@@ -188,11 +190,11 @@ class LinkedList<T>: MutableCollection<T> {
         return result
     }
 
-    override fun clear() {
+    //todo: link tussen nodes en list weghalen
+    final override fun clear() {
         size = 0
         first = null
         last = null
-        cllId = Random.nextInt().absoluteValue
     }
 
     override fun addAll(elements: Collection<T>): Boolean {
@@ -202,49 +204,6 @@ class LinkedList<T>: MutableCollection<T> {
 
     override fun containsAll(elements: Collection<T>) =
         elements.toSet().all{ item -> this.contains(item) }
-
-    //==================================================================================================================
-
-    private inner class Node(var data: T, var prev: Node?, var next: Node?, var cllId: Int): LinkedListPointer {
-
-        override operator fun plus(steps: Int): LinkedListPointer {
-            var current: Node? = this
-            if (steps >= 0) {
-                var stepsToDo = steps
-                while (current != null && stepsToDo > 0) {
-                    current = current.next
-                    stepsToDo--
-                }
-            } else {
-                var stepsToDo = -steps
-                while (current != null && stepsToDo > 0) {
-                    current = current.prev
-                    stepsToDo--
-                }
-            }
-            return current?:throw LinkedListException("LinkedListIndexPointer out of bounds")
-        }
-
-        override operator fun minus(steps: Int) =
-            plus(-steps)
-
-        override fun inc() =
-            plus(1)
-
-        override fun dec() =
-            minus(1)
-
-        override fun toString() =
-            data.toString()
-
-        fun decouple() {
-            next = null
-            prev = null
-            cllId = -1
-        }
-
-
-    }
 
     //==================================================================================================================
 
@@ -271,5 +230,17 @@ class LinkedList<T>: MutableCollection<T> {
         }
     }
 }
+
+//==================================================================================================================
+
+open class DataNode<T>(var data: T, prev: Node?, next: Node?, val ll: LinkedList<T>?): Node(prev, next) {
+    override fun toString() =
+        data.toString()
+
+    override fun pointsToListItem() =
+        ll != null
+}
+
+
 
 
