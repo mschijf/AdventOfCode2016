@@ -12,20 +12,20 @@ class CircularLinkedList<T>: MutableCollection<T> {
 
     init { clear() }
 
-    fun firstIndexOrNull(): LinkedListIndexPointer? =
+    fun firstIndexOrNull(): LinkedListPointer? =
         first
 
-    fun firstIndex(): LinkedListIndexPointer =
+    fun firstIndex(): LinkedListPointer =
         if (first != null) first!! else throw Exception("Circular list is Empty")
 
     override fun isEmpty() =
         size == 0
 
-    operator fun get(linkedListIndexPointer: LinkedListIndexPointer) =
-        linkedListIndexPointer.asNode().data
+    operator fun get(linkedListPointer: LinkedListPointer) =
+        linkedListPointer.asNode().data
 
-    operator fun set(linkedListIndexPointer: LinkedListIndexPointer, element:T): T {
-        val node = linkedListIndexPointer.asNode()
+    operator fun set(linkedListPointer: LinkedListPointer, element:T): T {
+        val node = linkedListPointer.asNode()
         val prevElement = node.data
         node.data = element
         return prevElement
@@ -48,8 +48,8 @@ class CircularLinkedList<T>: MutableCollection<T> {
      * assumption: the listIndex exists
      *
      */
-    fun add(linkedListIndexPointer: LinkedListIndexPointer, element: T): Boolean {
-        val node = linkedListIndexPointer.asNode()
+    fun add(linkedListPointer: LinkedListPointer, element: T): Boolean {
+        val node = linkedListPointer.asNode()
 
         val new = newNode(element, node.prev, node)
         val tmpPrev = new.prev
@@ -65,8 +65,8 @@ class CircularLinkedList<T>: MutableCollection<T> {
      *
      * returns the data that was on this listIndex
      */
-    fun removeAt(linkedListIndexPointer: LinkedListIndexPointer): T {
-        val node = linkedListIndexPointer.asNode()
+    fun removeAt(linkedListPointer: LinkedListPointer): T {
+        val node = linkedListPointer.asNode()
 
         node.prev.next = node.next
         node.next.prev = node.prev
@@ -93,7 +93,7 @@ class CircularLinkedList<T>: MutableCollection<T> {
         return false
     }
 
-    fun firstIndexOfOrNull(element: T) : LinkedListIndexPointer? {
+    fun firstIndexOfOrNull(element: T) : LinkedListPointer? {
         if (isEmpty())
             return null
         if (this[firstIndex()] == element)
@@ -108,7 +108,8 @@ class CircularLinkedList<T>: MutableCollection<T> {
     private fun newNode(data: T, pprev: Node?, pnext: Node?) =
         Node(data, pprev, pnext, cllId)
 
-    private fun LinkedListIndexPointer.asNode() : Node {
+    private fun LinkedListPointer.asNode() : Node {
+        @Suppress("UNCHECKED_CAST")
         val node = this as CircularLinkedList<T>.Node
         if (node.cllId != this@CircularLinkedList.cllId) {
             throw Exception ("List Index not belonging to (Circular)LinkedList")
@@ -173,11 +174,11 @@ class CircularLinkedList<T>: MutableCollection<T> {
 
     //==================================================================================================================
 
-    private inner class Node(var data: T, pprev: Node?, pnext: Node?, var cllId: Int): LinkedListIndexPointer {
+    private inner class Node(var data: T, pprev: Node?, pnext: Node?, var cllId: Int): LinkedListPointer {
         var prev: Node = pprev ?: this
         var next: Node = pnext ?: this
 
-        override operator fun plus(steps: Int): LinkedListIndexPointer {
+        override operator fun plus(steps: Int): LinkedListPointer {
             if (this@CircularLinkedList.isEmpty())
                 throw Exception("List is empty")
 
@@ -211,8 +212,8 @@ class CircularLinkedList<T>: MutableCollection<T> {
     //==================================================================================================================
 
     inner class CircularLinkedListIterator(private val cll: CircularLinkedList<T>): MutableIterator<T> {
-        private var cursor:LinkedListIndexPointer? = null
-        private var lastReturned:LinkedListIndexPointer? = null
+        private var cursor:LinkedListPointer? = null
+        private var lastReturned:LinkedListPointer? = null
 
         override fun hasNext() =
             (cll.size > 0) && (cursor == null || cursor !== cll.firstIndexOrNull())

@@ -289,6 +289,18 @@ class LinkedListTest {
 
     @Test
     operator fun iterator() {
+        val ll = listOf(1,2,3,4).toLinkedList()
+        assertTrue(ll.any { it==2 })
+        assertTrue(ll.last() == 4)
+        assertEquals(listOf(2,4), ll.filter{it % 2 == 0}.toList())
+
+        val mutableIterator = ll.iterator()
+        while (mutableIterator.hasNext()) {
+            val value = mutableIterator.next()
+            if (value % 2 == 0)
+                mutableIterator.remove()
+        }
+        assertEquals(listOf(1,3), ll.toList())
     }
 
 }
